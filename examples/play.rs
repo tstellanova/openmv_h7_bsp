@@ -28,7 +28,7 @@ fn HardFault(ef: &ExceptionFrame) -> ! {
 fn main() -> ! {
     rtt_init_print!(NoBlockTrim);
     rprintln!("--> MAIN --");
-    
+
     loop {
 
     }

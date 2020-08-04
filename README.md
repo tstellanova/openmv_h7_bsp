@@ -20,7 +20,7 @@ This is  work-in-progress
 - [ ] Does not overwrite the default Micropython bootloader
 - [ ] Launched by the Micropython bootloader
 - [ ] Debug build runs on board
-
+- [ ] SDIO card support
 
 ## Clocks
 - TBD
