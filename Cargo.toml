@@ -1,0 +1,40 @@
+
+[package]
+authors = ["Todd Stellanova <tstellanova@users.noreply.github.com>"]
+edition = "2018"
+readme = "README.md"
+name = "openmv_h7_bsp"
+version = "0.1.0"
+license = "BSD-3-Clause"
+repository = "https://github.com/tstellanova/openmv_h7_bsp"
+description  = "Board support crate OpenMV H7 machine vision board"
+categories = [
+    "embedded",
+    "hardware-support",
+    "no-std",
+]
+keywords = [
+    "embedded-hal-driver",
+    "mt9v034",
+    "camera",
+    "imaging",
+    "bsp"
+]
+
+[dependencies]
+embedded-hal = "0.2.3"
+cortex-m = "0.6.0"
+cortex-m-rt = "0.6.10"
+stm32h7 = { version = "0.10.0", features = ["stm32h743"] }
+stm32h7xx-hal = { version = "0.6.0", features = ["stm32h743", "rt"] }
+shared-bus = {version="0.1.4", features=["cortexm"] }
+panic-rtt-core = {version="0.1.1", optional=true}
+
+[dev-dependencies]
+panic-rtt-core = "0.1.1"
+shared-bus = {version = "0.1.4", features = ["cortexm"] }
+
+[features]
+default = []
+rttdebug = ["panic-rtt-core"]
+
