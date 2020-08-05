@@ -23,7 +23,8 @@ MEMORY
   /* reserve some flash for the preinstalled micropython bootloader? */
   BL_FLASH  : ORIGIN = 0x08000000, LENGTH = 256K
   /* this appears to be the app origin that the bootloader calls */
-  FLASH  : ORIGIN = 0x8040004, LENGTH = 1792K
+  FLASH  : ORIGIN = 0x8040000, LENGTH = 1792K
+  /* FLASH  : ORIGIN = 0x8000000, LENGTH = 1792K */
   /* use SRAM1 + SRAM2 for main RAM */
   RAM    : ORIGIN = 0x30000000, LENGTH = 256K
 
