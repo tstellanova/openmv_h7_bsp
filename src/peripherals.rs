@@ -1,5 +1,6 @@
 use p_hal::{prelude::*, stm32};
 use stm32h7xx_hal as p_hal;
+use p_hal::stm32 as pac;
 
 use ehal::blocking::delay::{DelayMs, DelayUs};
 use ehal::digital::v2::OutputPin;
@@ -14,10 +15,19 @@ use p_hal::rcc::PllConfigStrategy;
 use stm32h7xx_hal::gpio::Speed;
 // use p_hal::serial::config::{Parity, StopBits, WordLength};
 
-pub fn setup() -> (RgbLeds, InfraredLed, DelaySource, DcmiDataPins) {
+/// Main convenience function to initialize the system clock for highest performance,
+/// provide peripherals preconfigured.
+pub fn setup() -> (
+    RgbLeds,
+    InfraredLed,
+    DelaySource,
+    DcmiCtrlPins,
+    DcmiDataPins,
+    SdioCtrlPins,
+    SdioDataPins,
+) {
     let cp = cortex_m::Peripherals::take().unwrap();
     let dp = stm32::Peripherals::take().unwrap();
-    // let ccdr = rcc.sys_ck(100.mhz()).freeze(vos, &dp.SYSCFG);
 
     // --- Clock configuration
     // Set up the system clock
@@ -52,7 +62,7 @@ pub fn setup() -> (RgbLeds, InfraredLed, DelaySource, DcmiDataPins) {
     //vos defaults to Scale1 but needs to upgrade to Scale0 to boost to 480 MHz
     let vos = VoltageScale::Scale0; //may force higher? or just allow asserts to pass?
 
-    //TODO need to write : self.rb.d3cr.write(|w| unsafe { w.vos().bits(0b11) });
+    //TODO need to write? : self.rb.d3cr.write(|w| unsafe { w.vos().bits(0b11) });
     // see "VOS0 activation/deactivation sequence" in RM0433
 
     let mut ccdr = rcc.freeze(vos, &dp.SYSCFG);
@@ -155,11 +165,37 @@ pub fn setup() -> (RgbLeds, InfraredLed, DelaySource, DcmiDataPins) {
             .set_speed(Speed::VeryHigh), // DCMI_D7
     );
 
+    // SDMCC1 pins
+    let sdio_data_pins = (
+        gpioc.pc8.into_alternate_af12(), // D0
+        gpioc.pc9.into_alternate_af12(),
+        gpioc.pc10.into_alternate_af12(),
+        gpioc.pc11.into_alternate_af12(), // D3
+        );
+
+    let sdio_ctrl_pins = (
+        gpiod.pd0.into_alternate_af12(), // SD_CD
+        gpioc.pc12.into_alternate_af12(), // SDMMC1_CK
+        gpiod.pd2.into_alternate_af12(), // SDMMC1_CMD
+        );
+
+    // enable SDIO peripheral
+    dp.SDMMC1.dctrl.modify(|_r, w| w.sdioen().set_bit());
+
+    // TODO set clock
+    // dp.SDMMC1.clkcr.write(|w| unsafe { w.clkdiv().bits(118) });
+
+    // power on sdmmc1
+    dp.SDMMC1.power.write(|w| unsafe { w.pwrctrl().bits(0b11) });
+
     (
         (led_red, led_green, led_blue),
         led_infrared,
         delay_source,
+        dcmi_ctrl_pins,
         dcmi_data_pins,
+        sdio_ctrl_pins,
+        sdio_data_pins
     )
 }
 
@@ -195,6 +231,21 @@ pub type DcmiDataPins = (
     p_hal::gpio::gpiob::PB6<DcmiParallelDataPin>, // D5
     p_hal::gpio::gpioe::PE5<DcmiParallelDataPin>, // D6
     p_hal::gpio::gpioe::PE6<DcmiParallelDataPin>, // D7
-                                                  // p_hal::gpio::gpioc::PC10<DcmiParallelDataPin>, // D8
-                                                  // p_hal::gpio::gpioc::PC12<DcmiParallelDataPin>, // D9
+);
+
+
+pub type SdioAfPin = p_hal::gpio::Alternate<p_hal::gpio::AF12>;
+
+/// Pins for SDIO
+pub type SdioDataPins = (
+    p_hal::gpio::gpioc::PC8<SdioAfPin>, // PC8 // SDMMC1_D0 // SDIO_D0
+    p_hal::gpio::gpioc::PC9<SdioAfPin>, // PC9 // SDIO_D1
+    p_hal::gpio::gpioc::PC10<SdioAfPin>, // PC10 // SDIO_D2
+    p_hal::gpio::gpioc::PC11<SdioAfPin>, // PC11 // SDIO_D3
+);
+
+pub type SdioCtrlPins =  (
+    p_hal::gpio::gpiod::PD0<SdioAfPin>, // PD0 // SD_CD // TODO verify AF
+    p_hal::gpio::gpioc::PC12<SdioAfPin>, // PC12 // SDMMC1_CK // SDIO_CLK
+    p_hal::gpio::gpiod::PD2<SdioAfPin>, // PD2 // SDMMC1_CMD // SDIO_CMD
 );

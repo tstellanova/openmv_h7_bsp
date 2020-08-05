@@ -6,7 +6,7 @@ LICENSE: BSD3 (see LICENSE file)
 #![no_std]
 #![no_main]
 
-use cortex_m_rt::{entry, exception, ExceptionFrame};
+use cortex_m_rt::{entry};
 use panic_rtt_core::{self, rprintln, rtt_init_print};
 
 use openmv_h7_bsp::peripherals;
@@ -21,19 +21,31 @@ fn main() -> ! {
     rtt_init_print!(NoBlockTrim);
     rprintln!("--> MAIN --");
 
-    let (mut rgb_leds, _ir_led, mut delay_source, _dcmi_data_pins) =
-        peripherals::setup();
+    let (
+        mut rgb_leds,
+        _led_infrared,
+        mut delay_source,
+        _dcmi_ctrl_pins,
+        _dcmi_data_pins,
+        _sdio_ctrl_pins,
+        _sdio_data_pins
+    )
+        = peripherals::setup();
+
+    let _ = rgb_leds.0.set_low();
+    let _ = rgb_leds.1.set_high();
+    let _ = rgb_leds.2.set_low();
 
     loop {
         for _ in 0..10 {
             for _ in 0..10 {
-                let _ = rgb_leds.0.toggle();
-                delay_source.delay_ms(125u32);
+                let _ = rgb_leds.1.toggle();
+                delay_source.delay_ms(25u32);
             }
-            let _ = rgb_leds.1.toggle();
-            delay_source.delay_ms(250u32);
+            let _ = rgb_leds.0.toggle();
+            delay_source.delay_ms(25u32);
         }
         let _ = rgb_leds.2.toggle();
-        delay_source.delay_ms(500u32);
+        delay_source.delay_ms(50u32);
     }
 }
