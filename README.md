@@ -17,9 +17,9 @@ For installation and debugging use either
 
 This is  work-in-progress
 
-- [ ] Does not overwrite the default Micropython bootloader
-- [ ] Launched by the Micropython bootloader
-- [ ] Debug build runs on board
+- [x] Interoperates with the default Micropython bootloader
+- [x] Debug build runs on board
+- [x] Example with LED blinky
 - [ ] SDIO card support
 
 ## Clocks

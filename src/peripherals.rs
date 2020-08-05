@@ -1,5 +1,3 @@
-
-
 use p_hal::{prelude::*, stm32};
 use stm32h7xx_hal as p_hal;
 
@@ -8,26 +6,15 @@ use ehal::digital::v2::OutputPin;
 use ehal::digital::v2::ToggleableOutputPin;
 use embedded_hal as ehal;
 
-
 // use crate::port_types::{DbgUartPortType, Gps1PortType, HalGpioError, HalI2cError, HalSpiError};
 
+use p_hal::gpio::{Output, PushPull};
 use p_hal::pwr::VoltageScale;
 use p_hal::rcc::PllConfigStrategy;
-use p_hal::gpio::{Output, PushPull};
 use stm32h7xx_hal::gpio::Speed;
 // use p_hal::serial::config::{Parity, StopBits, WordLength};
 
-
-pub fn setup() ->
-    (
-        RgbLeds,
-        InfraredLed,
-        DelaySource,
-        DcmiDataPins,
-
-    )
-{
-
+pub fn setup() -> (RgbLeds, InfraredLed, DelaySource, DcmiDataPins) {
     let cp = cortex_m::Peripherals::take().unwrap();
     let dp = stm32::Peripherals::take().unwrap();
     // let ccdr = rcc.sys_ck(100.mhz()).freeze(vos, &dp.SYSCFG);
@@ -83,7 +70,6 @@ pub fn setup() ->
     let gpiog = dp.GPIOG.split(ccdr.peripheral.GPIOG);
     let gpioh = dp.GPIOH.split(ccdr.peripheral.GPIOH);
     let gpioi = dp.GPIOI.split(ccdr.peripheral.GPIOI);
-
 
     let led_red = gpioc.pc0.into_push_pull_output();
     let led_green = gpioc.pc1.into_push_pull_output();
@@ -177,15 +163,13 @@ pub fn setup() ->
     )
 }
 
-
-
-
-pub type InfraredLed =  p_hal::gpio::gpioe::PE2<Output<PushPull>>;
-pub type RgbLeds = (p_hal::gpio::gpioc::PC0<Output<PushPull>>,
-                    p_hal::gpio::gpioc::PC1<Output<PushPull>>,
-                    p_hal::gpio::gpioc::PC2<Output<PushPull>>);
+pub type InfraredLed = p_hal::gpio::gpioe::PE2<Output<PushPull>>;
+pub type RgbLeds = (
+    p_hal::gpio::gpioc::PC0<Output<PushPull>>,
+    p_hal::gpio::gpioc::PC1<Output<PushPull>>,
+    p_hal::gpio::gpioc::PC2<Output<PushPull>>,
+);
 pub type DelaySource = p_hal::delay::Delay;
-
 
 /// The DCMI (camera interface) has
 /// - a parallel data interface from 8 to 14 data lines,
@@ -211,6 +195,6 @@ pub type DcmiDataPins = (
     p_hal::gpio::gpiob::PB6<DcmiParallelDataPin>, // D5
     p_hal::gpio::gpioe::PE5<DcmiParallelDataPin>, // D6
     p_hal::gpio::gpioe::PE6<DcmiParallelDataPin>, // D7
-    // p_hal::gpio::gpioc::PC10<DcmiParallelDataPin>, // D8
-    // p_hal::gpio::gpioc::PC12<DcmiParallelDataPin>, // D9
+                                                  // p_hal::gpio::gpioc::PC10<DcmiParallelDataPin>, // D8
+                                                  // p_hal::gpio::gpioc::PC12<DcmiParallelDataPin>, // D9
 );

@@ -7,7 +7,7 @@ name = "openmv_h7_bsp"
 version = "0.1.0"
 license = "BSD-3-Clause"
 repository = "https://github.com/tstellanova/openmv_h7_bsp"
-description  = "Board support crate OpenMV H7 machine vision board"
+description  = "Board support crate for OpenMV H7 machine vision board"
 categories = [
     "embedded",
     "hardware-support",

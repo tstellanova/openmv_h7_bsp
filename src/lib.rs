@@ -3,7 +3,6 @@ Copyright (c) 2020 Todd Stellanova
 LICENSE: BSD3 (see LICENSE file)
 */
 
-
 #![no_std]
 
 ///! This crate provides some common useful interfaces to the
@@ -14,5 +13,3 @@ pub mod peripherals;
 
 // #[allow(unused)]
 // pub mod board;
-
-
