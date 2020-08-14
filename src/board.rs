@@ -9,7 +9,7 @@ use embedded_hal::blocking::delay::DelayMs;
 use core::sync::atomic::{AtomicPtr, Ordering};
 use cortex_m::singleton;
 
-use crate::dcmi::{DcmiWrapper, SQ_DIM_120};
+// use crate::dcmi::{DcmiWrapper, SQ_DIM_120};
 
 #[cfg(feature = "rttdebug")]
 use panic_rtt_core::rprintln;
@@ -26,8 +26,7 @@ pub struct Board<'a> {
 
     pub delay_source: DelaySource,
 
-    pub dcmi_wrap: Option<DcmiWrapper<'a>>,
-
+    // pub dcmi_wrap: Option<DcmiWrapper<'a>>,
     #[cfg(feature = "mt9v034")]
     pub mt9v034_config: Option<Mt9v034Configurator<'a>>,
 }
@@ -111,7 +110,6 @@ impl Default for Board<'_> {
 
             #[cfg(feature = "mt9v034")]
             mt9v034_config,
-            i2c1_bus: (),
         }
     }
 }

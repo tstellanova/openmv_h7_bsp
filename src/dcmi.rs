@@ -13,8 +13,8 @@ use cortex_m::singleton;
 
 use core::ops::Deref;
 
-// use pac::dmamux1::
-// use pac::dma2::ST;
+use pac::dmamux1::{self};
+
 
 #[cfg(feature = "rttdebug")]
 use panic_rtt_core::rprintln;

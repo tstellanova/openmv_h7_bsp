@@ -198,7 +198,8 @@ pub fn setup_peripherals() -> (
     let i2c1_port = {
         let scl = gpiob.pb8.into_alternate_af4().set_open_drain();
         let sda = gpiob.pb9.into_alternate_af4().set_open_drain();
-        dp.I2C1.i2c((scl, sda), 400.khz(), &ccdr)
+        dp.I2C1
+            .i2c((scl, sda), 400.khz(), ccdr.peripheral.I2C1, &ccdr.clocks)
     };
 
     (
