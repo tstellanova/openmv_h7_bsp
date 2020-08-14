@@ -21,14 +21,15 @@ static mut BOARD_PTR: AtomicPtr<Board> = AtomicPtr::new(core::ptr::null_mut());
 
 #[entry]
 fn main() -> ! {
-    rtt_init_print!(NoBlockTrim);
+    // rtt_init_print!(NoBlockTrim);
+    rtt_init_print!(BlockIfFull);
     rprintln!("--> MAIN --");
 
     let mut board = Board::default();
-    // this provides interrupt handlers access to the shared Board struct
-    unsafe {
-        BOARD_PTR.store(&mut board, Ordering::SeqCst);
-    }
+    // // this provides interrupt handlers access to the shared Board struct
+    // unsafe {
+    //     BOARD_PTR.store(&mut board, Ordering::SeqCst);
+    // }
 
     let _ = board.rgb_leds.0.set_low();
     let _ = board.rgb_leds.1.set_high();
