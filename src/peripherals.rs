@@ -1,6 +1,11 @@
+/*
+Copyright (c) 2020 Todd Stellanova
+LICENSE: BSD3 (see LICENSE file)
+*/
+
+use p_hal::stm32 as pac;
 use p_hal::{prelude::*, stm32};
 use stm32h7xx_hal as p_hal;
-use p_hal::stm32 as pac;
 
 use ehal::blocking::delay::{DelayMs, DelayUs};
 use ehal::digital::v2::OutputPin;
@@ -17,10 +22,11 @@ use stm32h7xx_hal::gpio::Speed;
 
 /// Main convenience function to initialize the system clock for highest performance,
 /// provide peripherals preconfigured.
-pub fn setup() -> (
+pub fn setup_peripherals() -> (
     RgbLeds,
     InfraredLed,
     DelaySource,
+    I2c1Port,
     DcmiCtrlPins,
     DcmiDataPins,
     SdioCtrlPins,
@@ -171,13 +177,13 @@ pub fn setup() -> (
         gpioc.pc9.into_alternate_af12(),
         gpioc.pc10.into_alternate_af12(),
         gpioc.pc11.into_alternate_af12(), // D3
-        );
+    );
 
     let sdio_ctrl_pins = (
-        gpiod.pd0.into_alternate_af12(), // SD_CD
+        gpiod.pd0.into_alternate_af12(),  // SD_CD
         gpioc.pc12.into_alternate_af12(), // SDMMC1_CK
-        gpiod.pd2.into_alternate_af12(), // SDMMC1_CMD
-        );
+        gpiod.pd2.into_alternate_af12(),  // SDMMC1_CMD
+    );
 
     // enable SDIO peripheral
     dp.SDMMC1.dctrl.modify(|_r, w| w.sdioen().set_bit());
@@ -188,14 +194,22 @@ pub fn setup() -> (
     // power on sdmmc1
     dp.SDMMC1.power.write(|w| unsafe { w.pwrctrl().bits(0b11) });
 
+    // I2C1 is used for configuring camera sensor
+    let i2c1_port = {
+        let scl = gpiob.pb8.into_alternate_af4().set_open_drain();
+        let sda = gpiob.pb9.into_alternate_af4().set_open_drain();
+        dp.I2C1.i2c((scl, sda), 400.khz(), &ccdr)
+    };
+
     (
         (led_red, led_green, led_blue),
         led_infrared,
         delay_source,
+        i2c1_port,
         dcmi_ctrl_pins,
         dcmi_data_pins,
         sdio_ctrl_pins,
-        sdio_data_pins
+        sdio_data_pins,
     )
 }
 
@@ -233,7 +247,6 @@ pub type DcmiDataPins = (
     p_hal::gpio::gpioe::PE6<DcmiParallelDataPin>, // D7
 );
 
-
 pub type SdioAfPin = p_hal::gpio::Alternate<p_hal::gpio::AF12>;
 
 /// Pins for SDIO
@@ -244,8 +257,13 @@ pub type SdioDataPins = (
     p_hal::gpio::gpioc::PC11<SdioAfPin>, // PC11 // SDIO_D3
 );
 
-pub type SdioCtrlPins =  (
+pub type SdioCtrlPins = (
     p_hal::gpio::gpiod::PD0<SdioAfPin>, // PD0 // SD_CD // TODO verify AF
     p_hal::gpio::gpioc::PC12<SdioAfPin>, // PC12 // SDMMC1_CK // SDIO_CLK
     p_hal::gpio::gpiod::PD2<SdioAfPin>, // PD2 // SDMMC1_CMD // SDIO_CMD
 );
+
+pub type I2c1AfPin = p_hal::gpio::Alternate<p_hal::gpio::AF4>;
+
+/// I2C1 port used for communicating with camera sensor
+pub type I2c1Port = p_hal::i2c::I2c<pac::I2C1>;

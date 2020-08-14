@@ -6,7 +6,7 @@ LICENSE: BSD3 (see LICENSE file)
 #![no_std]
 #![no_main]
 
-use cortex_m_rt::{entry};
+use cortex_m_rt::entry;
 use panic_rtt_core::{self, rprintln, rtt_init_print};
 
 use openmv_h7_bsp::peripherals;
@@ -28,9 +28,8 @@ fn main() -> ! {
         _dcmi_ctrl_pins,
         _dcmi_data_pins,
         _sdio_ctrl_pins,
-        _sdio_data_pins
-    )
-        = peripherals::setup();
+        _sdio_data_pins,
+    ) = peripherals::setup();
 
     let _ = rgb_leds.0.set_low();
     let _ = rgb_leds.1.set_high();
