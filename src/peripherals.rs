@@ -31,8 +31,6 @@ pub fn setup_peripherals() -> (
     I2c1Port,
     DcmiCtrlPins,
     DcmiDataPins,
-    SdioCtrlPins,
-    SdioDataPins,
     pac::DCMI,
 
 ) {
@@ -184,28 +182,29 @@ pub fn setup_peripherals() -> (
         )
     };
 
-    // SDMCC1 pins
-    let sdio_data_pins = (
-        gpioc.pc8.into_alternate_af12(), // D0
-        gpioc.pc9.into_alternate_af12(),
-        gpioc.pc10.into_alternate_af12(),
-        gpioc.pc11.into_alternate_af12(), // D3
-    );
-
-    let sdio_ctrl_pins = (
-        gpiod.pd0.into_alternate_af12(),  // SD_CD
-        gpioc.pc12.into_alternate_af12(), // SDMMC1_CK
-        gpiod.pd2.into_alternate_af12(),  // SDMMC1_CMD
-    );
-
-    // enable SDIO peripheral
-    dp.SDMMC1.dctrl.modify(|_r, w| w.sdioen().set_bit());
-
-    // TODO set clock
-    // dp.SDMMC1.clkcr.write(|w| unsafe { w.clkdiv().bits(118) });
-
-    // power on sdmmc1
-    dp.SDMMC1.power.write(|w| unsafe { w.pwrctrl().bits(0b11) });
+    // //TODO use stm32h7-sdmmc crate instead, to access SDIO
+    // // SDMCC1 pins
+    // let sdio_data_pins = (
+    //     gpioc.pc8.into_alternate_af12(), // D0
+    //     gpioc.pc9.into_alternate_af12(),
+    //     gpioc.pc10.into_alternate_af12(),
+    //     gpioc.pc11.into_alternate_af12(), // D3
+    // );
+    //
+    // let sdio_ctrl_pins = (
+    //     gpiod.pd0.into_alternate_af12(),  // SD_CD
+    //     gpioc.pc12.into_alternate_af12(), // SDMMC1_CK
+    //     gpiod.pd2.into_alternate_af12(),  // SDMMC1_CMD
+    // );
+    //
+    // // enable SDIO peripheral
+    // dp.SDMMC1.dctrl.modify(|_r, w| w.sdioen().set_bit());
+    //
+    // // TODO set clock
+    // // dp.SDMMC1.clkcr.write(|w| unsafe { w.clkdiv().bits(118) });
+    //
+    // // power on sdmmc1
+    // dp.SDMMC1.power.write(|w| unsafe { w.pwrctrl().bits(0b11) });
 
     // I2C1 is used for configuring camera sensor
     let i2c1_port = {
@@ -226,8 +225,8 @@ pub fn setup_peripherals() -> (
         i2c1_port,
         dcmi_ctrl_pins,
         dcmi_data_pins,
-        sdio_ctrl_pins,
-        sdio_data_pins,
+        // sdio_ctrl_pins,
+        // sdio_data_pins,
         dcmi,
     )
 }

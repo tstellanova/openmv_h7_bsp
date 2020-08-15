@@ -24,8 +24,7 @@ static mut BOARD_PTR: AtomicPtr<Board> = AtomicPtr::new(core::ptr::null_mut());
 
 #[entry]
 fn main() -> ! {
-    // rtt_init_print!(NoBlockTrim);
-    rtt_init_print!(BlockIfFull);
+    rtt_init_print!(NoBlockTrim);
     rprintln!("--> MAIN --");
 
     let mut board = Board::default();

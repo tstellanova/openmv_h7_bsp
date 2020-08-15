@@ -43,8 +43,6 @@ impl Default for Board<'_> {
             i2c1_port,
             dcmi_ctrl_pins,
             dcmi_data_pins,
-            sdio_ctrl_pins,
-            sdio_data_pins,
             _dcmi,
         ) = setup_peripherals();
 
@@ -74,7 +72,6 @@ impl Default for Board<'_> {
             let mut cam_config =
                 Mt9v034::new(i2c1_bus_mgr.acquire(), base_i2c_address);
 
-            //TODO
             // // configure image sensor with two distinct contexts:
             // // - Context A: 480x480 window, binning 4 -> 120x120 output images (square-120)
             // // - Context B: 752x480 window, binning 4 -> 188x120 output images
