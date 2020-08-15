@@ -17,6 +17,9 @@ use embedded_hal as ehal;
 
 use openmv_h7_bsp::board::Board;
 
+
+// TODO trap DMA2_STR1 and DCMI interrupts
+
 static mut BOARD_PTR: AtomicPtr<Board> = AtomicPtr::new(core::ptr::null_mut());
 
 #[entry]

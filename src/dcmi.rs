@@ -14,7 +14,7 @@ use cortex_m::singleton;
 use core::ops::Deref;
 
 use pac::dmamux1::{self};
-
+use pac::dma1::ST;
 
 #[cfg(feature = "rttdebug")]
 use panic_rtt_core::rprintln;
@@ -220,8 +220,7 @@ impl DcmiWrapper<'_> {
         dma2.st[1].cr.modify(|_, w| {
             w
                 // select ch1
-                .chsel()
-                .bits(1)
+                // .chsel().bits(1)
                 // transferring peripheral to memory
                 .dir()
                 .peripheral_to_memory()
@@ -427,9 +426,9 @@ impl DcmiWrapper<'_> {
     fn enable_dma_interrupts(&mut self, dma2: &pac::DMA2) {
         cortex_m::interrupt::free(|_| {
             // enable interrupts for DMA2 transfer completion
-            pac::NVIC::unpend(pac::Interrupt::DMA2_STREAM1);
+            pac::NVIC::unpend(pac::Interrupt::DMA2_STR1);
             unsafe {
-                pac::NVIC::unmask(pac::Interrupt::DMA2_STREAM1);
+                pac::NVIC::unmask(pac::Interrupt::DMA2_STR1);
             }
         });
 
@@ -468,7 +467,7 @@ impl DcmiWrapper<'_> {
         return self.unread_frames_count.load(Ordering::SeqCst);
     }
 
-    /// Call this from DMA2_STREAM1 interrupt
+    /// Call this from DMA2_STR1 interrupt
     pub fn dma2_stream1_irqhandler(&mut self) {
         // DMA2 transfer from DCMI to memory completed
         self.dma_it_count.fetch_add(1, Ordering::SeqCst);

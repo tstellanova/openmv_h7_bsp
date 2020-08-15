@@ -9,7 +9,7 @@ use embedded_hal::blocking::delay::DelayMs;
 use core::sync::atomic::{AtomicPtr, Ordering};
 use cortex_m::singleton;
 
-// use crate::dcmi::{DcmiWrapper, SQ_DIM_120};
+use crate::dcmi::{DcmiWrapper, SQ_DIM_120};
 
 #[cfg(feature = "rttdebug")]
 use panic_rtt_core::rprintln;
@@ -45,6 +45,7 @@ impl Default for Board<'_> {
             dcmi_data_pins,
             sdio_ctrl_pins,
             sdio_data_pins,
+            _dcmi,
         ) = setup_peripherals();
 
         //We are safe to forget the DCMI pins after configuration
