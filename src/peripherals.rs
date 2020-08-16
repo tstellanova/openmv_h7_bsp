@@ -1,6 +1,11 @@
+/*
+Copyright (c) 2020 Todd Stellanova
+LICENSE: BSD3 (see LICENSE file)
+*/
+
+use p_hal::stm32 as pac;
 use p_hal::{prelude::*, stm32};
 use stm32h7xx_hal as p_hal;
-use p_hal::stm32 as pac;
 
 use ehal::blocking::delay::{DelayMs, DelayUs};
 use ehal::digital::v2::OutputPin;
@@ -15,16 +20,19 @@ use p_hal::rcc::PllConfigStrategy;
 use stm32h7xx_hal::gpio::Speed;
 // use p_hal::serial::config::{Parity, StopBits, WordLength};
 
+use pac::{DCMI, RCC};
+
 /// Main convenience function to initialize the system clock for highest performance,
 /// provide peripherals preconfigured.
-pub fn setup() -> (
+pub fn setup_peripherals() -> (
     RgbLeds,
     InfraredLed,
     DelaySource,
+    I2c1Port,
     DcmiCtrlPins,
     DcmiDataPins,
-    SdioCtrlPins,
-    SdioDataPins,
+    pac::DCMI,
+
 ) {
     let cp = cortex_m::Peripherals::take().unwrap();
     let dp = stm32::Peripherals::take().unwrap();
@@ -86,6 +94,13 @@ pub fn setup() -> (
     let led_blue = gpioc.pc2.into_push_pull_output();
     let led_infrared = gpioe.pe2.into_push_pull_output();
 
+
+    //enable DCMI and DMA clocks before configuring their pins
+    let rcc2 = unsafe { &(*RCC::ptr()) };
+    // enable peripheral clocks for DCMI and DMA2
+    rcc2.ahb2enr.modify(|_, w| w.dcmien().set_bit());
+    rcc2.ahb1enr.modify(|_, w| w.dma2en().set_bit());
+
     // DCMI control pins
     let dcmi_ctrl_pins = {
         let pixck = gpioa
@@ -114,88 +129,105 @@ pub fn setup() -> (
 
     // DCMI digital camera interface pins (AF13)
     // this board supports 8 parallel lines D0-D7
-    let dcmi_data_pins = (
-        gpioc
-            .pc6
-            .into_pull_up_input()
-            .into_alternate_af13()
-            .internal_pull_up(true)
-            .set_speed(Speed::VeryHigh), // DCMI_D0
-        gpioc
-            .pc7
-            .into_pull_up_input()
-            .into_alternate_af13()
-            .internal_pull_up(true)
-            .set_speed(Speed::VeryHigh), // DCMI_D1
-        gpioe
-            .pe0
-            .into_pull_up_input()
-            .into_alternate_af13()
-            .internal_pull_up(true)
-            .set_speed(Speed::VeryHigh), // DCMI_D2
-        gpioe
-            .pe1
-            .into_pull_up_input()
-            .into_alternate_af13()
-            .internal_pull_up(true)
-            .set_speed(Speed::VeryHigh), // DCMI_D3
-        gpioe
-            .pe4
-            .into_pull_up_input()
-            .into_alternate_af13()
-            .internal_pull_up(true)
-            .set_speed(Speed::VeryHigh), // DCMI_D4
-        gpiob
-            .pb6
-            .into_pull_up_input()
-            .into_alternate_af13()
-            .internal_pull_up(true)
-            .set_speed(Speed::VeryHigh), // DCMI_D5
-        gpioe
-            .pe5
-            .into_pull_up_input()
-            .into_alternate_af13()
-            .internal_pull_up(true)
-            .set_speed(Speed::VeryHigh), // DCMI_D6
-        gpioe
-            .pe6
-            .into_pull_up_input()
-            .into_alternate_af13()
-            .internal_pull_up(true)
-            .set_speed(Speed::VeryHigh), // DCMI_D7
-    );
+    let dcmi_data_pins = {
+        (
+            gpioc
+                .pc6
+                .into_pull_up_input()
+                .into_alternate_af13()
+                .internal_pull_up(true)
+                .set_speed(Speed::VeryHigh), // DCMI_D0
+            gpioc
+                .pc7
+                .into_pull_up_input()
+                .into_alternate_af13()
+                .internal_pull_up(true)
+                .set_speed(Speed::VeryHigh), // DCMI_D1
+            gpioe
+                .pe0
+                .into_pull_up_input()
+                .into_alternate_af13()
+                .internal_pull_up(true)
+                .set_speed(Speed::VeryHigh), // DCMI_D2
+            gpioe
+                .pe1
+                .into_pull_up_input()
+                .into_alternate_af13()
+                .internal_pull_up(true)
+                .set_speed(Speed::VeryHigh), // DCMI_D3
+            gpioe
+                .pe4
+                .into_pull_up_input()
+                .into_alternate_af13()
+                .internal_pull_up(true)
+                .set_speed(Speed::VeryHigh), // DCMI_D4
+            gpiob
+                .pb6
+                .into_pull_up_input()
+                .into_alternate_af13()
+                .internal_pull_up(true)
+                .set_speed(Speed::VeryHigh), // DCMI_D5
+            gpioe
+                .pe5
+                .into_pull_up_input()
+                .into_alternate_af13()
+                .internal_pull_up(true)
+                .set_speed(Speed::VeryHigh), // DCMI_D6
+            gpioe
+                .pe6
+                .into_pull_up_input()
+                .into_alternate_af13()
+                .internal_pull_up(true)
+                .set_speed(Speed::VeryHigh), // DCMI_D7
+        )
+    };
 
-    // SDMCC1 pins
-    let sdio_data_pins = (
-        gpioc.pc8.into_alternate_af12(), // D0
-        gpioc.pc9.into_alternate_af12(),
-        gpioc.pc10.into_alternate_af12(),
-        gpioc.pc11.into_alternate_af12(), // D3
-        );
+    // //TODO use stm32h7-sdmmc crate instead, to access SDIO
+    // // SDMCC1 pins
+    // let sdio_data_pins = (
+    //     gpioc.pc8.into_alternate_af12(), // D0
+    //     gpioc.pc9.into_alternate_af12(),
+    //     gpioc.pc10.into_alternate_af12(),
+    //     gpioc.pc11.into_alternate_af12(), // D3
+    // );
+    //
+    // let sdio_ctrl_pins = (
+    //     gpiod.pd0.into_alternate_af12(),  // SD_CD
+    //     gpioc.pc12.into_alternate_af12(), // SDMMC1_CK
+    //     gpiod.pd2.into_alternate_af12(),  // SDMMC1_CMD
+    // );
+    //
+    // // enable SDIO peripheral
+    // dp.SDMMC1.dctrl.modify(|_r, w| w.sdioen().set_bit());
+    //
+    // // TODO set clock
+    // // dp.SDMMC1.clkcr.write(|w| unsafe { w.clkdiv().bits(118) });
+    //
+    // // power on sdmmc1
+    // dp.SDMMC1.power.write(|w| unsafe { w.pwrctrl().bits(0b11) });
 
-    let sdio_ctrl_pins = (
-        gpiod.pd0.into_alternate_af12(), // SD_CD
-        gpioc.pc12.into_alternate_af12(), // SDMMC1_CK
-        gpiod.pd2.into_alternate_af12(), // SDMMC1_CMD
-        );
+    // I2C1 is used for configuring camera sensor
+    let i2c1_port = {
+        let scl = gpiob.pb8.into_alternate_af4().set_open_drain();
+        let sda = gpiob.pb9.into_alternate_af4().set_open_drain();
+        // use "standard" timing for i2c
+        dp.I2C1
+            .i2c((scl, sda), 100.khz(), ccdr.peripheral.I2C1, &ccdr.clocks)
+    };
 
-    // enable SDIO peripheral
-    dp.SDMMC1.dctrl.modify(|_r, w| w.sdioen().set_bit());
-
-    // TODO set clock
-    // dp.SDMMC1.clkcr.write(|w| unsafe { w.clkdiv().bits(118) });
-
-    // power on sdmmc1
-    dp.SDMMC1.power.write(|w| unsafe { w.pwrctrl().bits(0b11) });
+    let dcmi = dp.DCMI;
+    let dma = dp.DMA2;
 
     (
         (led_red, led_green, led_blue),
         led_infrared,
         delay_source,
+        i2c1_port,
         dcmi_ctrl_pins,
         dcmi_data_pins,
-        sdio_ctrl_pins,
-        sdio_data_pins
+        // sdio_ctrl_pins,
+        // sdio_data_pins,
+        dcmi,
     )
 }
 
@@ -233,7 +265,6 @@ pub type DcmiDataPins = (
     p_hal::gpio::gpioe::PE6<DcmiParallelDataPin>, // D7
 );
 
-
 pub type SdioAfPin = p_hal::gpio::Alternate<p_hal::gpio::AF12>;
 
 /// Pins for SDIO
@@ -244,8 +275,13 @@ pub type SdioDataPins = (
     p_hal::gpio::gpioc::PC11<SdioAfPin>, // PC11 // SDIO_D3
 );
 
-pub type SdioCtrlPins =  (
+pub type SdioCtrlPins = (
     p_hal::gpio::gpiod::PD0<SdioAfPin>, // PD0 // SD_CD // TODO verify AF
     p_hal::gpio::gpioc::PC12<SdioAfPin>, // PC12 // SDMMC1_CK // SDIO_CLK
     p_hal::gpio::gpiod::PD2<SdioAfPin>, // PD2 // SDMMC1_CMD // SDIO_CMD
 );
+
+pub type I2c1AfPin = p_hal::gpio::Alternate<p_hal::gpio::AF4>;
+
+/// I2C1 port used for communicating with camera sensor
+pub type I2c1Port = p_hal::i2c::I2c<pac::I2C1>;
