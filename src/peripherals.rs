@@ -11,16 +11,21 @@ use ehal::blocking::delay::{DelayMs, DelayUs};
 use ehal::digital::v2::OutputPin;
 use ehal::digital::v2::ToggleableOutputPin;
 use embedded_hal as ehal;
-
-// use crate::port_types::{DbgUartPortType, Gps1PortType, HalGpioError, HalI2cError, HalSpiError};
+use embedded_hal::PwmPin;
+use p_hal::timer::{self, Timer};
+use p_hal::time::MegaHertz;
 
 use p_hal::gpio::{Output, PushPull};
 use p_hal::pwr::VoltageScale;
 use p_hal::rcc::PllConfigStrategy;
 use stm32h7xx_hal::gpio::Speed;
-// use p_hal::serial::config::{Parity, StopBits, WordLength};
 
 use pac::{DCMI, RCC};
+use p_hal::pwm;
+
+#[cfg(feature = "rttdebug")]
+use panic_rtt_core::rprintln;
+
 
 /// Main convenience function to initialize the system clock for highest performance,
 /// provide peripherals preconfigured.
@@ -36,6 +41,11 @@ pub fn setup_peripherals() -> (
 ) {
     let cp = cortex_m::Peripherals::take().unwrap();
     let dp = stm32::Peripherals::take().unwrap();
+
+    #[cfg(not(feature = "breakout"))]
+    let hse_xtal_freq: MegaHertz = 12.mhz();
+    #[cfg(feature = "breakout")]
+    let hse_xtal_freq: MegaHertz = 25.mhz();
 
     // --- Clock configuration
     // Set up the system clock
@@ -53,7 +63,7 @@ pub fn setup_peripherals() -> (
     let rcc = dp
         .RCC
         .constrain()
-        .use_hse(12.mhz()) // OpenMV H7 has 12 MHz xtal HSE
+        .use_hse(hse_xtal_freq) // OpenMV H7 has 12 MHz xtal HSE
         .sysclk(LE_SYSCLK.mhz())
         .hclk(LE_HCLK.mhz())
         .pll1_p_ck(480.mhz())
@@ -67,6 +77,7 @@ pub fn setup_peripherals() -> (
 
     let pwr = dp.PWR.constrain();
     let _vos = pwr.freeze();
+
     //vos defaults to Scale1 but needs to upgrade to Scale0 to boost to 480 MHz
     let vos = VoltageScale::Scale0; //may force higher? or just allow asserts to pass?
 
@@ -100,6 +111,15 @@ pub fn setup_peripherals() -> (
     // enable peripheral clocks for DCMI and DMA2
     rcc2.ahb2enr.modify(|_, w| w.dcmien().set_bit());
     rcc2.ahb1enr.modify(|_, w| w.dma2en().set_bit());
+
+    // I2C1 is used for configuring camera sensor
+    let i2c1_port = {
+        let scl = gpiob.pb8.into_alternate_af4().set_open_drain();
+        let sda = gpiob.pb9.into_alternate_af4().set_open_drain();
+        // use "standard" timing for i2c
+        dp.I2C1
+            .i2c((scl, sda), 100.khz(), ccdr.peripheral.I2C1, &ccdr.clocks)
+    };
 
     // DCMI control pins
     let dcmi_ctrl_pins = {
@@ -182,6 +202,23 @@ pub fn setup_peripherals() -> (
         )
     };
 
+    // Supply an XCLK (external clock) signal to the camera sensor using PWM.
+    // Attempting 12 MHz XCLCK, Using TIM1_CH1
+    let pwm_pins = (
+        gpioa.pa8.into_alternate_af1(),
+        gpioa.pa9.into_alternate_af1(), //unused
+    );
+
+    // Configure PWM at 12 MHz
+    let (mut xclk_pwm, ..) = dp.TIM1.pwm(pwm_pins, 12.mhz(), ccdr.peripheral.TIM1, &ccdr.clocks);
+    // Output PWM on PA8
+    let max = xclk_pwm.get_max_duty();
+    xclk_pwm.set_duty(max / 2);
+    xclk_pwm.enable();
+
+    #[cfg(feature = "rttdebug")]
+    rprintln!("TIM3 XCLK config done");
+
     // //TODO use stm32h7-sdmmc crate instead, to access SDIO
     // // SDMCC1 pins
     // let sdio_data_pins = (
@@ -206,14 +243,7 @@ pub fn setup_peripherals() -> (
     // // power on sdmmc1
     // dp.SDMMC1.power.write(|w| unsafe { w.pwrctrl().bits(0b11) });
 
-    // I2C1 is used for configuring camera sensor
-    let i2c1_port = {
-        let scl = gpiob.pb8.into_alternate_af4().set_open_drain();
-        let sda = gpiob.pb9.into_alternate_af4().set_open_drain();
-        // use "standard" timing for i2c
-        dp.I2C1
-            .i2c((scl, sda), 100.khz(), ccdr.peripheral.I2C1, &ccdr.clocks)
-    };
+
 
     let dcmi = dp.DCMI;
     let dma = dp.DMA2;

@@ -16,6 +16,7 @@ use ehal::digital::v2::ToggleableOutputPin;
 use embedded_hal as ehal;
 
 use openmv_h7_bsp::board::Board;
+use cortex_m::asm::bkpt;
 
 
 // TODO trap DMA2_STR1 and DCMI interrupts
@@ -26,6 +27,7 @@ static mut BOARD_PTR: AtomicPtr<Board> = AtomicPtr::new(core::ptr::null_mut());
 fn main() -> ! {
     rtt_init_print!(NoBlockTrim);
     rprintln!("--> MAIN --");
+
 
     let mut board = Board::default();
     // // this provides interrupt handlers access to the shared Board struct

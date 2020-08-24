@@ -16,6 +16,7 @@ use panic_rtt_core::rprintln;
 
 #[cfg(feature = "mt9v034")]
 use mt9v034_i2c::{BinningFactor, Mt9v034, ParamContext};
+use core::marker::PhantomData;
 
 /// The main Board support type:
 /// This contains both pre-initialized drivers for
@@ -29,6 +30,9 @@ pub struct Board<'a> {
     // pub dcmi_wrap: Option<DcmiWrapper<'a>>,
     #[cfg(feature = "mt9v034")]
     pub mt9v034_config: Option<Mt9v034Configurator<'a>>,
+
+    phantom: PhantomData<&'a u32>,
+
 }
 
 impl Default for Board<'_> {
@@ -68,33 +72,35 @@ impl Default for Board<'_> {
         let mt9v034_config = {
             // Default i2c address is the same as for px4flow board
             let base_i2c_address = mt9v034_i2c::PX4FLOW_CAM_ADDRESS;
+            #[cfg(feature = "breakout")]
+            let base_i2c_address = mt9v034_i2c::ARDUCAM_BREAKOUT_ADDRESS;
 
             let mut cam_config =
-                Mt9v034::new(i2c1_bus_mgr.acquire(), base_i2c_address);
+            Mt9v034::new(i2c1_bus_mgr.acquire(), base_i2c_address);
 
-            // // configure image sensor with two distinct contexts:
-            // // - Context A: 480x480 window, binning 4 -> 120x120 output images (square-120)
-            // // - Context B: 752x480 window, binning 4 -> 188x120 output images
-            // const BINNING_A: BinningFactor = BinningFactor::Four;
-            // const BINNING_B: BinningFactor = BinningFactor::Four;
-            // const WINDOW_W_A: u16 = 480;
-            // const WINDOW_H_A: u16 = 480;
-            // const WINDOW_W_B: u16 = 752;
-            // const WINDOW_H_B: u16 = 480;
-            //
-            // cam_config
-            //     .setup_with_dimensions(
-            //         WINDOW_W_A,
-            //         WINDOW_H_A,
-            //         BINNING_A,
-            //         BINNING_A,
-            //         WINDOW_W_B,
-            //         WINDOW_H_B,
-            //         BINNING_B,
-            //         BINNING_B,
-            //         ParamContext::ContextB,
-            //     )
-            //     .expect("Could not configure MT9V034");
+            // configure image sensor with two distinct contexts:
+            // - Context A: 480x480 window, binning 4 -> 120x120 output images (square-120)
+            // - Context B: 752x480 window, binning 4 -> 188x120 output images
+            const BINNING_A: BinningFactor = BinningFactor::Four;
+            const BINNING_B: BinningFactor = BinningFactor::Four;
+            const WINDOW_W_A: u16 = 480;
+            const WINDOW_H_A: u16 = 480;
+            const WINDOW_W_B: u16 = 752;
+            const WINDOW_H_B: u16 = 480;
+
+            cam_config
+                .setup_with_dimensions(
+                    WINDOW_W_A,
+                    WINDOW_H_A,
+                    BINNING_A,
+                    BINNING_A,
+                    WINDOW_W_B,
+                    WINDOW_H_B,
+                    BINNING_B,
+                    BINNING_B,
+                    ParamContext::ContextB,
+                )
+                .expect("Could not configure MT9V034");
 
             Some(cam_config)
         };
@@ -109,6 +115,7 @@ impl Default for Board<'_> {
 
             #[cfg(feature = "mt9v034")]
             mt9v034_config,
+            phantom: Default::default()
         }
     }
 }
