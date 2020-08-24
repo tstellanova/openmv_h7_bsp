@@ -25,10 +25,6 @@ keywords = [
 embedded-hal = "0.2.4"
 cortex-m = "0.6.2"
 cortex-m-rt = "0.6.12"
-
-#stm32h7 = { version = "0.10.0", features = ["stm32h743"] }
-#stm32h7xx-hal = { version = "0.4.0", features = ["stm32h743", "rt"] }
-
 stm32h7 = { version = "0.11.0",features = ["stm32h743v"] }
 stm32h7xx-hal = { version = "0.6.0", features = ["stm32h743v", "rt"] }
 
@@ -43,7 +39,9 @@ shared-bus = {version = "0.1.4", features = ["cortexm"] }
 
 [features]
 default = []
+# support for NUCLEO-H743ZI2 breakout board
 breakout= []
+# support for rtt debug output
 rttdebug = ["panic-rtt-core"]
 # enable support for MT9V034 global shutter image sensor
 mt9v034 = ["mt9v034-i2c"]

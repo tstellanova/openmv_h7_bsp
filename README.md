@@ -12,6 +12,23 @@ For installation and debugging use either
 (which also requires recently introduced stm32h743 support).
 
 
+## Examples
+
+The examples are currently designed to be used with J-Link / RTT.
+In the future as tools such as probe-rs solidify, we may switch to that toolset
+
+
+- In one shell run: `./start_gdb_server_jlink.sh`
+- In another shell run: `JLinkRTTClient`
+- Then run your choice of examples:
+
+```shell script
+cargo run  --example blinky 
+```
+
+```shell script
+cargo run  --example play --features  rttdebug,mt9v034
+```
 
 ## Status
 
@@ -23,13 +40,15 @@ This is  work-in-progress
 - [ ] SDIO card support
 
 ## Clocks
-- TBD
+- 12 MHz high speed external (HSE) clock crystal
+- LSE TBD
 
 
 ## Notes on buses
 ###  I2C Buses
 Format: `(SCL, SDA)`
-- TBD
+- (PB8, PB9) I2C1 is used for configuring camera sensor
+- Other i2c TBD
 
 ### SPI Buses
 Format:  `(SCK, MISO, MOSI)` 
@@ -43,7 +62,8 @@ Format:  `(SCK, MISO, MOSI)`
 
 
 ### LEDs
-- TBD: 3 colors, plus separate IR
+- LEDs r,g,b = PC0, PC1, PC2 on OpenMV H7
+- IR led on PE2
 
 
 ### UARTs / USARTs

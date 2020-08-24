@@ -16,6 +16,7 @@ use panic_rtt_core::rprintln;
 
 #[cfg(feature = "mt9v034")]
 use mt9v034_i2c::{BinningFactor, Mt9v034, ParamContext};
+use core::marker::PhantomData;
 
 /// The main Board support type:
 /// This contains both pre-initialized drivers for
@@ -29,6 +30,9 @@ pub struct Board<'a> {
     // pub dcmi_wrap: Option<DcmiWrapper<'a>>,
     #[cfg(feature = "mt9v034")]
     pub mt9v034_config: Option<Mt9v034Configurator<'a>>,
+
+    phantom: PhantomData<&'a u32>,
+
 }
 
 impl Default for Board<'_> {
@@ -111,6 +115,7 @@ impl Default for Board<'_> {
 
             #[cfg(feature = "mt9v034")]
             mt9v034_config,
+            phantom: Default::default()
         }
     }
 }
