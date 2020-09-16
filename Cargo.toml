@@ -27,7 +27,6 @@ cortex-m = "0.6.3"
 cortex-m-rt = "0.6.13"
 stm32h7 = { version = "0.11.0",features = ["stm32h743v"] }
 stm32h7xx-hal = { version = "0.7.1", features = ["stm32h743v", "rt"] }
-
 #stm32h7-sdmmc = "0.1.0"
 shared-bus = {version="0.1.4", features=["cortexm"] }
 panic-rtt-core = {version="0.1.1", optional=true}
@@ -35,7 +34,6 @@ mt9v034-i2c = { features=["rttdebug"], version="0.1.5", optional=true}
 
 [dev-dependencies]
 panic-rtt-core = "0.1.1"
-shared-bus = {version = "0.1.4", features = ["cortexm"] }
 
 [profile.release]
 debug = 1 # default is `false`; using `true` is also OK
